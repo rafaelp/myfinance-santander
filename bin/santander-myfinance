@@ -1,0 +1,96 @@
+#!/usr/bin/env ruby
+
+require 'ap'
+require 'thor'
+require 'roo'
+require 'qif'
+require 'date'
+require 'rest_client'
+
+class SantanderMyfinance < Thor
+  desc "import -f [FILE]", "Imports [FILE] from Santander to MyFinance"
+  method_option :xls_filename, :aliases => "-f", :desc => "Specify a filename of xls downloaded from Santander"
+  def import
+    @xls_filename = options[:xls_filename]
+    convert
+    upload
+  end
+
+  private
+    def convert
+      puts "--> Convertendo o arquivo XLS em QIF...".yellow
+      begin
+        convert_xls_to_csv
+        create_qif
+        delete_tmp_file
+        puts "    O arquivo #{qif_filename} foi criado com sucesso!".green
+      rescue
+        puts "    Houve um erro ao converter o arquivo :(".red
+      end
+    end
+
+    def upload
+      puts "--> Importando o arquivo para o MyFinance...".yellow
+      if myfinance_available?
+        RestClient.post "https://#{ENV['MYFINANCE_TOKEN']}:X@app.myfinance.com.br/entities/#{ENV['MYFINANCE_ENTITY']}/deposit_accounts/#{ENV['MYFINANCE_DEPOSIT_ACCOUNT']}/bank_statements", {'bank_statement[file]' => File.new(qif_filename, 'r'), :multipart => true}, {'ACCOUNT_ID' => ENV['MYFINANCE_ACCOUNT_ID']}
+        puts "    O arquivo #{qif_filename} foi enviado para o MyFinance com sucesso!".green
+      else
+        puts "    #{'ATENÇÃO!!!'.red} #{'As variáveis de ambiente com as informações do MyFinance não estão setadas.'.white}"
+        puts "    Para visualizar o seu token, acesse https://app.passaporteweb.com.br/profile/".white
+        puts "    Para configurar, utilize o comando abaixo, substituindo os valores de cada variável.".white
+        puts "    $ export MYFINANCE_ENTITY=99 MYFINANCE_DEPOSIT_ACCOUNT=99 MYFINANCE_ACCOUNT_ID=99 MYFINANCE_TOKEN=SEUTOKENAQUI".blue
+        puts "    A importação não foi realizada :(".red
+      end
+    rescue
+      puts "    Houve um erro ao enviar o arquivo para o MyFinance :(".red
+    end
+
+    def convert_xls_to_csv
+      `ssconvert #{xls_filename} #{tmp_filename} 2>&1`
+    end
+
+    def create_qif
+      Qif::Writer.open(qif_filename, type = 'Bank', format = 'dd/mm/yyyy') do |qif|
+        (6..s.last_row).each do |line|
+          date = (Date.strptime(s.cell(line, 1), "%Y/%d/%m") rescue Date.strptime(s.cell(line, 1), "%d/%m/%Y")).strftime('%d/%m/%Y')
+          transaction = {
+            date: date,
+            memo: s.cell(line, 3),
+            number: s.cell(line, 4),
+            amount: s.cell(line, 5).gsub(".","").gsub(",",".").to_f,
+          }
+          @first_transaction_date ||= date
+          @last_transaction_date = date
+          qif << Qif::Transaction.new(transaction)
+        end
+        puts "    O arquivo contém #{s.last_row-5} transações do dia #{@first_transaction_date} ao dia #{@last_transaction_date}.".white
+      end
+    end
+
+    def delete_tmp_file
+      FileUtils.rm(tmp_filename)
+    end
+
+    def tmp_filename
+      @tmp_filename ||= "/tmp/boletosimples-myfinance-#{rand(999)}.csv"
+    end
+
+    def qif_filename
+      xls_filename.gsub(".xls", ".qif")
+    end
+
+    def xls_filename
+      @xls_filename
+    end
+
+    def myfinance_available?
+      ENV['MYFINANCE_TOKEN'] and ENV['MYFINANCE_ENTITY'] and ENV['MYFINANCE_DEPOSIT_ACCOUNT'] and ENV['MYFINANCE_ACCOUNT_ID']
+    end
+
+    def s
+      @s ||= Roo::CSV.new(tmp_filename)
+    end
+
+end
+
+SantanderMyfinance.start(ARGV)
