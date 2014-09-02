@@ -7,7 +7,7 @@ require 'qif'
 require 'date'
 require 'rest_client'
 
-class SantanderMyfinance < Thor
+class MyfinanceSantander < Thor
   desc "import -f [FILE]", "Imports [FILE] from Santander to MyFinance"
   method_option :xls_filename, :aliases => "-f", :desc => "Specify a filename of xls downloaded from Santander"
   def import
@@ -72,7 +72,7 @@ class SantanderMyfinance < Thor
     end
 
     def tmp_filename
-      @tmp_filename ||= "/tmp/boletosimples-myfinance-#{rand(999)}.csv"
+      @tmp_filename ||= "/tmp/myfinance-santander-#{rand(999)}.csv"
     end
 
     def qif_filename
@@ -93,4 +93,4 @@ class SantanderMyfinance < Thor
 
 end
 
-SantanderMyfinance.start(ARGV)
+MyfinanceSantander.start(ARGV)

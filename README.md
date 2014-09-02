@@ -1,4 +1,4 @@
-# Santander - Myfinance
+# Myfinance - Santander
 
 Esse é um script para importar o arquivo de extrato em formato Excel do Santander para o [MyFinance](http://myfinance.com.br).
 
@@ -27,7 +27,7 @@ $ export MYFINANCE_ENTITY=99 MYFINANCE_DEPOSIT_ACCOUNT=99 MYFINANCE_ACCOUNT_ID=9
 Para importar um arquivo de extrato:
 
 ```
-$ bundle exec bin/boletosimples-myfinance import -f exemplo.xls
+$ bundle exec bin/myfinance-santander import -f exemplo.xls
 ```
 
 ## Licença
@@ -36,7 +36,7 @@ Esse código é livre para ser usado dentro dos termos da licença [MIT license]
 
 ## Bugs, Issues, Agradecimentos, etc
 
-Comentários são bem-vindos. Envie seu feedback através do [issue tracker do GitHub](http://github.com/rafaelp/santander-myfinance/issues)
+Comentários são bem-vindos. Envie seu feedback através do [issue tracker do GitHub](http://github.com/rafaelp/myfinance-santander/issues)
 
 ## Autor
 
