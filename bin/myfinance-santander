@@ -26,6 +26,7 @@ class MyfinanceSantander < Thor
         puts "    O arquivo #{qif_filename} foi criado com sucesso!".green
       rescue
         puts "    Houve um erro ao converter o arquivo :(".red
+        exit
       end
     end
 
