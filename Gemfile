@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-ruby '2.1.2'
+ruby '2.1.5'
 
 gem 'awesome_print', '1.2.0'
 gem 'thor', '0.19.1'
