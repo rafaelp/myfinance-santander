@@ -35,6 +35,9 @@ class MyfinanceSantander < Thor
       if myfinance_available?
         RestClient.post "https://#{ENV['MYFINANCE_TOKEN']}:X@app.myfinance.com.br/entities/#{ENV['MYFINANCE_ENTITY']}/deposit_accounts/#{ENV['MYFINANCE_DEPOSIT_ACCOUNT']}/bank_statements", {'bank_statement[file]' => File.new(qif_filename, 'r'), :multipart => true}, {'ACCOUNT_ID' => ENV['MYFINANCE_ACCOUNT_ID']}
         puts "    O arquivo #{qif_filename} foi enviado para o MyFinance com sucesso!".green
+        puts "--> Excluindo o arquivo #{qif_filename}...".red
+        delete_qif_file
+        puts "    Arquivo excluído com sucesso!".green
       else
         puts "    #{'ATENÇÃO!!!'.red} #{'As variáveis de ambiente com as informações do MyFinance não estão setadas.'.white}"
         puts "    Para visualizar o seu token, acesse https://app.passaporteweb.com.br/profile/".white
@@ -70,6 +73,10 @@ class MyfinanceSantander < Thor
 
     def delete_tmp_file
       FileUtils.rm(tmp_filename)
+    end
+
+    def delete_qif_file
+      FileUtils.rm(qif_filename)
     end
 
     def tmp_filename
