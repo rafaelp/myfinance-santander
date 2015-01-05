@@ -96,7 +96,7 @@ class MyfinanceSantander < Thor
     end
 
     def s
-      @s ||= Roo::CSV.new(tmp_filename)
+      @s ||= Roo::CSV.new(tmp_filename, csv_options: {encoding: Encoding::ISO_8859_1})
     end
 
 end
